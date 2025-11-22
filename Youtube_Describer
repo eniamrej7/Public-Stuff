@@ -1,0 +1,196 @@
+import { hostedMcpTool, Agent, RunContext, AgentInputItem, Runner, withTrace } from "@openai/agents";
+import { z } from "zod";
+
+
+// Tool definitions
+const mcp = hostedMcpTool({
+  serverLabel: "zapier",
+  allowedTools: [
+    "bumpups_send_chat",
+    "youtube_find_video"
+  ],
+  authorization: "xxx"
+  requireApproval: "never",
+  serverUrl: "https://mcp.zapier.com/api/mcp/mcp"
+})
+const mcp1 = hostedMcpTool({
+  serverLabel: "zapier",
+  allowedTools: [
+    "youtube_find_video"
+  ],
+  authorization: "xxx",
+  requireApproval: "never",
+  serverUrl: "https://mcp.zapier.com/api/mcp/mcp"
+})
+const YoutubeHelperSchema = z.object({ url: z.string(), prompt: z.string(), language: z.enum(["en"]), output_format: z.enum(["text"]), model: z.enum(["bump-1.0"]) });
+const YtUiSchema = z.object({ thumbnailUrl: z.string(), title: z.string(), videoDuration: z.string() });
+const youtubeHelper = new Agent({
+  name: "YouTube Helper",
+  instructions: `You are a payload formatter.
+
+User will provide a youtube url, and you set it in the JSON schema for url
+
+User will ask a question about the video and you set that to prompt`,
+  model: "gpt-5-nano",
+  outputType: YoutubeHelperSchema,
+  modelSettings: {
+    reasoning: {
+      effort: "low"
+    },
+    store: true
+  }
+});
+
+interface YtBotContext {
+  stateUrl: string;
+  stateModel: string;
+  statePrompt: string;
+  stateLanguage: string;
+  stateOutputformat: string;
+}
+const ytBotInstructions = (runContext: RunContext<YtBotContext>, _agent: Agent<YtBotContext>) => {
+  const { stateUrl, stateModel, statePrompt, stateLanguage, stateOutputformat } = runContext.context;
+  return `Here is the expected data for the bumpups_send_chat payload:
+
+\"url\":\"${stateUrl}\",
+\"model\":\"${stateModel}\",
+\"prompt\":\"${statePrompt}\",
+\"language\":\"${stateLanguage}\",
+\"output_format\":\"${stateOutputformat}\"
+
+Use the mcp tool, and receive its response and put in chat.`
+}
+const ytBot = new Agent({
+  name: "YT Bot",
+  instructions: ytBotInstructions,
+  model: "gpt-5-nano",
+  tools: [
+    mcp
+  ],
+  modelSettings: {
+    reasoning: {
+      effort: "high"
+    },
+    store: true
+  }
+});
+
+interface YtUiContext {
+  stateUrl: string;
+}
+const ytUiInstructions = (runContext: RunContext<YtUiContext>, _agent: Agent<YtUiContext>) => {
+  const { stateUrl } = runContext.context;
+  return `Using youtube_find_video tool find the video's maxres thumbnail url and place in widget's  thumbnailURL
+Add video's titile to widget's title
+Add video's  durartion to widget's videoDuration  
+
+Here is the youtube video:
+ ${stateUrl}`
+}
+const ytUi = new Agent({
+  name: "YT UI",
+  instructions: ytUiInstructions,
+  model: "gpt-5-nano",
+  tools: [
+    mcp1
+  ],
+  outputType: YtUiSchema,
+  modelSettings: {
+    reasoning: {
+      effort: "high"
+    },
+    store: true
+  }
+});
+
+type WorkflowInput = { input_as_text: string };
+
+
+// Main code entrypoint
+export const runWorkflow = async (workflow: WorkflowInput) => {
+  return await withTrace("YouTube  describer", async () => {
+    const state = {
+      youtubeurl: null,
+      prompt: null,
+      model: null,
+      language: null,
+      outputformat: null,
+      url: null
+    };
+    const conversationHistory: AgentInputItem[] = [
+      { role: "user", content: [{ type: "input_text", text: workflow.input_as_text }] }
+    ];
+    const runner = new Runner({
+      traceMetadata: {
+        __trace_source__: "agent-builder",
+        workflow_id: "wf_690cd2d5514081909a36e4d546a228b4032eecf551ad90fa"
+      }
+    });
+    const youtubeHelperResultTemp = await runner.run(
+      youtubeHelper,
+      [
+        ...conversationHistory
+      ]
+    );
+    conversationHistory.push(...youtubeHelperResultTemp.newItems.map((item) => item.rawItem));
+
+    if (!youtubeHelperResultTemp.finalOutput) {
+        throw new Error("Agent result is undefined");
+    }
+
+    const youtubeHelperResult = {
+      output_text: JSON.stringify(youtubeHelperResultTemp.finalOutput),
+      output_parsed: youtubeHelperResultTemp.finalOutput
+    };
+    state.url = youtubeHelperResult.output_parsed.url;
+    state.prompt = youtubeHelperResult.output_parsed.prompt;
+    state.model = youtubeHelperResult.output_parsed.model;
+    state.language = youtubeHelperResult.output_parsed.language;
+    state.outputformat = youtubeHelperResult.output_parsed.output_format;
+    const ytBotResultTemp = await runner.run(
+      ytBot,
+      [
+        ...conversationHistory
+      ],
+      {
+        context: {
+          stateUrl: state.url,
+          stateModel: state.model,
+          statePrompt: state.prompt,
+          stateLanguage: state.language,
+          stateOutputformat: state.outputformat
+        }
+      }
+    );
+    conversationHistory.push(...ytBotResultTemp.newItems.map((item) => item.rawItem));
+
+    if (!ytBotResultTemp.finalOutput) {
+        throw new Error("Agent result is undefined");
+    }
+
+    const ytBotResult = {
+      output_text: ytBotResultTemp.finalOutput ?? ""
+    };
+    const ytUiResultTemp = await runner.run(
+      ytUi,
+      [
+        ...conversationHistory
+      ],
+      {
+        context: {
+          stateUrl: state.url
+        }
+      }
+    );
+    conversationHistory.push(...ytUiResultTemp.newItems.map((item) => item.rawItem));
+
+    if (!ytUiResultTemp.finalOutput) {
+        throw new Error("Agent result is undefined");
+    }
+
+    const ytUiResult = {
+      output_text: JSON.stringify(ytUiResultTemp.finalOutput),
+      output_parsed: ytUiResultTemp.finalOutput
+    };
+  });
+}
