@@ -1,3 +1,7 @@
+# This is an multi AI agent flow developed wih Open AI's Agent Builder
+# These agents recommend a travel and transportation itenarary based on user's input
+# The output is to custom widget 
+
 import { webSearchTool, Agent, AgentInputItem, Runner, withTrace } from "@openai/agents";
 import { z } from "zod";
 
