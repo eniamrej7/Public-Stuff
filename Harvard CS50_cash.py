@@ -1,3 +1,6 @@
+# this program calculates what denominations and numbers of coins to give for a given input of cents
+# This is a python homework assignment from the HArvard CS50 course
+
 from cs50 import get_float
 
 while True:
