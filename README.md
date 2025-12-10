@@ -1,2 +1,9 @@
-Files in this repository include class assignments from Harvard CS50 Intro to Programming course as well as Agent SDK code from an Open AI Agent.
-Please contact for demonstration of the agents as the authorization codes have been removed for security reasons.
+Hi there. My name is Jermaine.
+This public repository contains programs I've developed from simple c programs  to complex multi agent AI workflows. 
+Please let me know if you have any questions.
+
+Contact
+- jermaine@alumni.harvard.edu
+
+Notes
+To tun these programs you will either need c, python, or Open AIs agent builder.
