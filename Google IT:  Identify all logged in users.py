@@ -1,3 +1,6 @@
+# This is a lab assignment from the Coursera Google IT Automations & Python course
+# This script outputs who the current logged users are based upon a review of logs
+
 def get_event_date(event):
     return event.date
 
