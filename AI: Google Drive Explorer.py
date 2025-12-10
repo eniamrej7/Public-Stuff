@@ -1,3 +1,7 @@
+# This is a code export from Open AI's agent builder 
+# This program connects to Google Drive and has access to the files within it and can be prompted to respond to questions using thos files
+# I am using a Google sheets file with mock vehicle data as a reference for the program to answer automotive questions
+
 import { hostedMcpTool, Agent, AgentInputItem, Runner, withTrace } from "@openai/agents";
 
 
