@@ -1,3 +1,6 @@
+// This is a Harvard CS%0 lab assignment written in c
+// This program calcultes how long it will take for a population to grow from a startign size to an ending size.
+
 #include <cs50.h>
 #include <stdio.h>
 
