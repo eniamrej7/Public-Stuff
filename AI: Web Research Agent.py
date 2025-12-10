@@ -1,3 +1,6 @@
+# This is a web research AI agent built in Open AI's Agent Builder.
+# This agent provides details on companies it is prompted for
+
 import { z } from "zod";
 import { Agent, AgentInputItem, Runner, withTrace } from "@openai/agents";
 
