@@ -1,3 +1,6 @@
+// This is a Harvard CS50 lab assignment written in C
+// for a given input it will output a number of "#" in  a step pattern similar to the
+// stairs at the end of the first level of Mario 1 for NES
 #include <cs50.h>
 #include <stdio.h>
 
