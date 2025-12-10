@@ -1,3 +1,8 @@
+# This is a multi agent program built with Open AI to allow users to prompt for details about YouTube videos
+# This python code was exported from OpenAI Agent's GUI
+# Autorization details have been removed for security reasons
+
+
 import { hostedMcpTool, Agent, RunContext, AgentInputItem, Runner, withTrace } from "@openai/agents";
 import { z } from "zod";
 
@@ -9,7 +14,7 @@ const mcp = hostedMcpTool({
     "bumpups_send_chat",
     "youtube_find_video"
   ],
-  authorization: "xxx"
+  authorization: "xxx";
   requireApproval: "never",
   serverUrl: "https://mcp.zapier.com/api/mcp/mcp"
 })
@@ -82,7 +87,7 @@ const ytUiInstructions = (runContext: RunContext<YtUiContext>, _agent: Agent<YtU
   const { stateUrl } = runContext.context;
   return `Using youtube_find_video tool find the video's maxres thumbnail url and place in widget's  thumbnailURL
 Add video's titile to widget's title
-Add video's  durartion to widget's videoDuration  
+Add video's  durartion to widget's videoDuration; 
 
 Here is the youtube video:
  ${stateUrl}`
