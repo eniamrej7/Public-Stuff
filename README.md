@@ -6,4 +6,4 @@ Contact
 - jermaine@alumni.harvard.edu
 
 Notes
-To tun these programs you will either need c, python, or Open AIs agent builder.
+To run these programs you will either need c, python, or Open AIs agent builder.
